@@ -16,56 +16,21 @@ import java.util.Random;
  * @author Denise Navarro i Irina Gómez
  */
 public class GambitodeLOA implements IPlayer, IAuto {
+
     private String name;
     private GameStatus s;
+    CellType jugadorActual;
 
     public GambitodeLOA(String name) {
         this.name = name;
     }
+
     /**
      * Jugador Gambito
-     * 
+     *
      */
     public String getName() {
         return "Gambito(" + name + ")";
-    }
-     public Move move(GameStatus s) {
-
-        CellType color = s.getCurrentPlayer();
-        this.s = s;
-        int qn = s.getNumberOfPiecesPerColor(color);
-        ArrayList<Point> pendingAmazons = new ArrayList<>();
-        for (int q = 0; q < qn; q++) {
-            pendingAmazons.add(s.getPiece(color, q));
-        }
-        
-        // Iterem aleatòriament per les peces fins que trobem una que es pot moure.
-        Point queenTo = null;
-        Point queenFrom = null;
-        int puntuacionMax = Integer.MIN_VALUE;
-        for(int i = 0; i < pendingAmazons.size(); i++){
-            ArrayList<Point> movPossibles = s.getMoves(pendingAmazons.get(i));
-            for(Point mov : movPossibles){
-                GameStatus saux = new GameStatus(s);
-                saux.movePiece(pendingAmazons.get(i), mov);
-                int puntuacio = heuristica(saux);
-                
-                // Comprovar si la punt > puntMax
-                // Guardarme a on vaig, d'on vinc/fitxa que es mou
-            }
-            
-        }
-        while (queenTo == null) {
-            Random rand = new Random();
-            int q = rand.nextInt(pendingAmazons.size());
-            queenFrom = pendingAmazons.remove(q);
-            queenTo = posicioRandomAmazon(s, queenFrom);
-        }
-
-        // "s" és una còpia del tauler, per es pot manipular sense perill
-        s.movePiece(queenFrom, queenTo);
-
-        return new Move(queenFrom, queenTo, 0, 0, SearchType.RANDOM);
     }
 
     @Override
@@ -73,5 +38,55 @@ public class GambitodeLOA implements IPlayer, IAuto {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-}
+    public Move move(GameStatus s) {
 
+        jugadorActual = s.getCurrentPlayer();
+        this.s = s;
+        int qn = s.getNumberOfPiecesPerColor(jugadorActual);
+
+        // Iterem aleatòriament per les peces fins que trobem una que es pot moure.
+        Point queenTo = null;
+        Point queenFrom = null;
+        int puntuacioMax = Integer.MIN_VALUE;
+        for (int i = 0; i < qn; i++) {
+            Point posicioIniciCandidat = s.getPiece(jugadorActual, i);
+            ArrayList<Point> movPossibles = s.getMoves(posicioIniciCandidat);
+            for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                Point posicioFinalCandidat = movPossibles.get(movIt);
+
+                GameStatus taulerAmbMovimentFet = new GameStatus(s);
+                taulerAmbMovimentFet.movePiece(posicioIniciCandidat, posicioFinalCandidat);
+                int puntuacio = heuristica(taulerAmbMovimentFet);
+
+                if (puntuacio > puntuacioMax) {
+                    puntuacioMax = puntuacio;
+                    queenFrom = posicioIniciCandidat;
+                    queenTo = posicioFinalCandidat;
+                }
+            }
+        }
+
+        return new Move(queenFrom, queenTo, 0, 0, SearchType.RANDOM);
+    }
+
+    public int heuristica(GameStatus taulerAmbMovimentFet) {
+        int puntuacio = 0;
+        int distancies = 0;
+
+        for (int i = 0; i < taulerAmbMovimentFet.getSize(); i++) {
+            for (int j = 0; j < taulerAmbMovimentFet.getSize(); j++) {
+                Point analitzant = new Point(i, j);
+                CellType color = taulerAmbMovimentFet.getPos(analitzant);
+                if (color == jugadorActual) {
+                    int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
+                    for (int k = 0; k < qn; k++) {
+                        Point altraFitxa = s.getPiece(jugadorActual, k);
+                        distancies += (int) analitzant.distance(altraFitxa);
+                    }
+                }
+            }
+        }
+
+        return puntuacio - distancies;
+    }
+}

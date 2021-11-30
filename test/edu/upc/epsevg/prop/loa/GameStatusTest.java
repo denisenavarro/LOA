@@ -16,7 +16,8 @@ import static org.junit.Assert.*;
  */
 public class GameStatusTest extends GameStatus {
     
-    public GameStatusTest() {
+    public GameStatusTest(int[][] game){
+        //
     }
 
     

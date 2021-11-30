@@ -43,6 +43,7 @@ public class RandomPlayer implements IPlayer, IAuto {
         CellType color = s.getCurrentPlayer();
         this.s = s;
         int qn = s.getNumberOfPiecesPerColor(color);
+        
         ArrayList<Point> pendingAmazons = new ArrayList<>();
         for (int q = 0; q < qn; q++) {
             pendingAmazons.add(s.getPiece(color, q));
