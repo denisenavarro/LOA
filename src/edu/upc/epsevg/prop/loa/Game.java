@@ -23,9 +23,10 @@ public class Game {
                 
                 //IPlayer player1 = new HumanPlayer("Octopus");
                 IPlayer player1 = new RandomPlayer("Crazy Chris");
-                IPlayer player2 = new RandomPlayer("Crazy Ivan");
+                //IPlayer player2 = new RandomPlayer("Crazy Ivan");
+                IPlayer player2 = new GambitodeLOA("Gambito");
                                 
-                new Board(player1 , player2, 4, Level.DIFFICULT);
+                new Board(player1 , player2, 4, Level.EASY);
              }
         });
     }

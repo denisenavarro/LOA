@@ -33,8 +33,9 @@ public class GameStatusTest {
             {+1,+0,+0,+0,+0,+0,+0,+1},
             {+0,-1,-1,-1,-1,-1,-1,+0}
         };
-        GameStatus gs = new GameStatus(matrix);
-        System.out.println(gs.toString());        
+        ElMeuStatus gs = new ElMeuStatus(matrix);
+        System.out.println(gs.toString()); 
+        System.out.println(gs.getheuristica());
         System.out.println("=========================================================");
                
        
