@@ -15,29 +15,21 @@ import java.util.Random;
  *
  * @author Denise Navarro i Irina Gómez
  */
-public class GambitodeLOA implements IPlayer{
-    
+public class GambitodeLOA implements IPlayer, IAuto {
     private String name;
-    private GambitodeLOA s;
+    private GameStatus s;
 
     public GambitodeLOA(String name) {
         this.name = name;
     }
-
-    /*@Override
-    public void timeout() {
-        // Nothing to do! I'm so fast, I never timeout 8-)
-    }*/
-
     /**
-     * Decideix el moviment del jugador donat un tauler i un color de peça que
-     * ha de posar.
-     *
-     * @param s Tauler i estat actual de joc.
-     * @return el moviment que fa el jugador.
+     * Jugador Gambito
+     * 
      */
-   /* @Override
-    public Move move(GambitodeLOA s) {
+    public String getName() {
+        return "Gambito(" + name + ")";
+    }
+     public Move move(GameStatus s) {
 
         CellType color = s.getCurrentPlayer();
         this.s = s;
@@ -46,9 +38,23 @@ public class GambitodeLOA implements IPlayer{
         for (int q = 0; q < qn; q++) {
             pendingAmazons.add(s.getPiece(color, q));
         }
+        
         // Iterem aleatòriament per les peces fins que trobem una que es pot moure.
         Point queenTo = null;
         Point queenFrom = null;
+        int puntuacionMax = Integer.MIN_VALUE;
+        for(int i = 0; i < pendingAmazons.size(); i++){
+            ArrayList<Point> movPossibles = s.getMoves(pendingAmazons.get(i));
+            for(Point mov : movPossibles){
+                GameStatus saux = new GameStatus(s);
+                saux.movePiece(pendingAmazons.get(i), mov);
+                int puntuacio = heuristica(saux);
+                
+                // Comprovar si la punt > puntMax
+                // Guardarme a on vaig, d'on vinc/fitxa que es mou
+            }
+            
+        }
         while (queenTo == null) {
             Random rand = new Random();
             int q = rand.nextInt(pendingAmazons.size());
@@ -60,57 +66,6 @@ public class GambitodeLOA implements IPlayer{
         s.movePiece(queenFrom, queenTo);
 
         return new Move(queenFrom, queenTo, 0, 0, SearchType.RANDOM);
-    }*/
-
-    /**
-     * Ens avisa que hem de parar la cerca en curs perquè s'ha exhaurit el temps
-     * de joc.
-     */
-    public String getName() {
-        return "Gambito(" + name + ")";
-    }
-
-    private Point posicioRandomAmazon(GameStatus s, Point pos) {
-                
-        ArrayList<Point> points =  s.getMoves(pos);
-        if (points.size() == 0) {
-            return null;//no es pot moure
-        }
-        
-        Random rand = new Random();
-        int p = rand.nextInt(points.size());
-        return points.get(p);
-    }
-    
-    public int recorre(Board b){
-    return 0;
-    }
-    /*private boolean isInBounds(int x, int y) {
-        return (x >= 0 && x < s.getSize())
-                && (y >= 0 && y < s.getSize());
-    }
-
-    private Point posicioRandom(GameStatus s) {
-        int n = s.getEmptyCellsCount();
-
-        Random rand = new Random();
-        int p = rand.nextInt(n) + 1;//de 1 a n
-        for (int i = 0; i < s.getSize(); i++) {
-            for (int j = 0; j < s.getSize(); j++) {
-                if (s.getPos(i, j) == CellType.EMPTY) {
-                    p--;
-                    if (p == 0) {
-                        return new Point(i, j);
-                    }
-                }
-            }
-        }
-        throw new RuntimeException("Random exhausted");
-    }*/
-
-    @Override
-    public Move move(GameStatus gs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

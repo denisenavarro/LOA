@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  *
  * @author Usuari
  */
-public class GameStatusTest {
+public class GameStatusTest extends GameStatus {
     
     public GameStatusTest() {
     }

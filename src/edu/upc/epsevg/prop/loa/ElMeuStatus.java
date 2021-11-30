@@ -5,6 +5,8 @@
  */
 package edu.upc.epsevg.prop.loa;
 
+import edu.upc.epsevg.prop.loa.GameStatus;
+
 /**
  *
  * @author Denise NAvarro i Irina Gómez
