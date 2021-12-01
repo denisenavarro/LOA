@@ -20,6 +20,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
     private String name;
     private GameStatus s;
     CellType jugadorActual;
+    CellType jugadorOponent;
+ 
 
     public GambitodeLOA(String name) {
         this.name = name;
@@ -60,8 +62,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
                 if (puntuacio > puntuacioMax) {
                     puntuacioMax = puntuacio;
-                    queenFrom = posicioIniciCandidat;
-                    queenTo = posicioFinalCandidat;
+                    queenFrom = posicioIniciCandidat; //d'on vinc
+                    queenTo = posicioFinalCandidat;   //on vull anar
                 }
             }
         }
@@ -71,7 +73,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
     public int heuristica(GameStatus taulerAmbMovimentFet) {
         int puntuacio = 0;
-        int distancies = 0;
+        int distanciesGambito = 0;
+        int distanciesOponent = 0;
 
         for (int i = 0; i < taulerAmbMovimentFet.getSize(); i++) {
             for (int j = 0; j < taulerAmbMovimentFet.getSize(); j++) {
@@ -81,12 +84,34 @@ public class GambitodeLOA implements IPlayer, IAuto {
                     int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
                     for (int k = 0; k < qn; k++) {
                         Point altraFitxa = s.getPiece(jugadorActual, k);
-                        distancies += (int) analitzant.distance(altraFitxa);
+                        distanciesGambito += (int) analitzant.distance(altraFitxa);
                     }
+                }else if(color!=jugadorActual){
+                   //Comptar  la distancia que tenen les fitxes del meu oponent
+                   int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
+                    for (int k = 0; k < qn; k++) {
+                        Point altraFitxa = s.getPiece(jugadorActual, k);
+                        distanciesOponent += (int) analitzant.distance(altraFitxa);
+                    } 
                 }
             }
         }
-
-        return puntuacio - distancies;
+        if(distanciesGambito<distanciesOponent) return puntuacio - distanciesGambito;
+        else return puntuacio - distanciesOponent;
+    }
+    
+    int putejarOponent(GameStatus taulerAmbMovimentFet){
+        /*
+        //Bloquejar els camins, interposant fitxes propies. Heurística 1
+        if(l'oponent té tantes posicions per avançar com per a juntar-se amb un grupet o fitxa)
+            if (tinc tantes fitxes com la distancia que te la fitxa del oponent per a juntar-se amb un grupet)
+                blokeja el camí;
+            else if(Si una fitxa meua, pot menjar-se una fitxa que uneix un grup)
+                me la menjo;
+            else if(si tinc una fitxa al camí de l'oponent') 
+                la trek   */     
+        //Capturar las fichas que unen, es decir, fichas sin las cuales un grupo queda dividido.        
+        //Cambiar el número de fichas sobre una línea para modificar así los movimientos posibles.                   
+                    return 0;
     }
 }
