@@ -21,10 +21,12 @@ public class GambitodeLOA implements IPlayer, IAuto {
     private GameStatus s;
     CellType jugadorActual;
     CellType jugadorOponent;
+    int nodesNoExplorats;
  
 
     public GambitodeLOA(String name) {
         this.name = name;
+        nodesNoExplorats = 0;
     }
 
     /**
@@ -70,6 +72,121 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
         return new Move(queenFrom, queenTo, 0, 0, SearchType.RANDOM);
     }
+    
+    public class MinimaxResultat {
+        int valor;
+        Point desde;
+        Point finsa;
+        MinimaxResultat(int valor, Point desde, Point finsa){
+            this.valor = valor;
+            this.desde = desde;
+            this.finsa = finsa;
+        }
+    }
+    
+     public MinimaxResultat minimax(GameStatus t, int profunditat, int alpha, int beta, boolean maximitzant, Point queenFrom, Point queenTo) {
+        if(profunditat == 0 ){
+            int valor = heuristica(t);
+            return new MinimaxResultat(valor, queenFrom, queenTo);
+        }
+        
+        if(maximitzant){            
+            int puntuacioMax = Integer.MIN_VALUE;
+            Point finsaMax = null;
+            Point desdeMax = null;
+            
+            // Mirem tots els moviments possibles
+            int qn = t.getNumberOfPiecesPerColor(jugadorActual);
+            Boolean continuar = true; // Boolean per poda alfa-beta
+            for (int i = 0; i < qn; i++) {
+                Point posicioIniciCandidat = t.getPiece(jugadorActual, i);
+                ArrayList<Point> movPossibles = t.getMoves(posicioIniciCandidat);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    // El moviment és vàlid, l'afegim al tauler
+                    GameStatus taux = new GameStatus(t);
+                    taux.movePiece(queenFrom, queenTo);
+                    
+                    // Fem minimax i agafem la jugada amb valor max
+                    MinimaxResultat resultat = minimax(taux, profunditat-1, alpha, beta, false, queenFrom, queenTo);
+                    if(puntuacioMax < resultat.valor){
+                        puntuacioMax = resultat.valor;
+                        desdeMax = resultat.desde;
+                        finsaMax = resultat.finsa;
+                        alpha = resultat.valor;
+                    }
+                    
+                    // Poda alfa-beta
+                    if(alpha <= beta){
+                        if (beta <= alpha) {
+                            continuar = false;
+                            // Calcul de nodes no explorats
+                            int movRestantsAquestaIteracio = t.getNumberOfPiecesPerColor(jugadorActual) - movIt;
+                            // Valor inicial: Assumim que tots eren fulla
+                            int nodesAdicionals = movRestantsAquestaIteracio;
+                            if (profunditat >= 2) {
+                                // Cada node restant generarà t.getMida() nodes adicionals
+                                nodesAdicionals = (int) movRestantsAquestaIteracio * t.getSize();
+                                // Cada node successor generarà t.getMida() nodes per cada profunditat restant
+                                nodesAdicionals += (int) Math.pow(t.getSize(), profunditat - 1);
+                            }
+                            System.out.println("Evitada la exploració de " + nodesAdicionals + " nodes aproximadament");
+
+                            // Sumatori de nodes no explorats
+                            nodesNoExplorats += nodesAdicionals;
+                    }
+                }
+            }
+            
+            }
+            return new MinimaxResultat(puntuacioMax, desdeMax, finsaMax);
+        } else {            
+            int puntuacioMin = Integer.MAX_VALUE;
+            Point desdeMin = null;
+            Point finsaMin = null;
+            
+            // Mirem tots els moviments possibles
+            Boolean continuar = true; // Boolean per poda alfa-beta
+            int qn = t.getNumberOfPiecesPerColor(jugadorActual);
+            for (int i = 0; i < qn; i++) {
+                Point posicioIniciCandidat = t.getPiece(jugadorActual, i);
+                ArrayList<Point> movPossibles = t.getMoves(posicioIniciCandidat);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    // El moviment és vàlid, l'afegim al tauler
+                    GameStatus taux = new GameStatus(t);
+                    taux.movePiece(queenFrom, queenTo);
+                    
+                    // Fem minimax i agafem la jugada amb valor max
+                    MinimaxResultat resultat = minimax(taux, profunditat-1, alpha, beta, true, queenFrom, queenTo);
+                    if(resultat.valor < puntuacioMin){
+                        puntuacioMin = resultat.valor;
+                        desdeMin = resultat.desde;
+                        finsaMin = resultat.finsa;
+                        beta = resultat.valor;
+                    }
+                    
+                    // Poda alfa-beta
+                    if (beta <= alpha) {
+                        continuar = false;
+                        // Calcul de nodes no explorats
+                        int movRestantsAquestaIteracio = t.getNumberOfPiecesPerColor(jugadorActual) - movIt;
+                        // Valor inicial: Assumim que tots eren fulla
+                        int nodesAdicionals = movRestantsAquestaIteracio;
+                        if (profunditat >= 2) {
+                            // Cada node restant generarà t.getMida() nodes adicionals
+                            nodesAdicionals = (int) movRestantsAquestaIteracio * t.getSize();
+                            // Cada node successor generarà t.getMida() nodes per cada profunditat restant
+                            nodesAdicionals += (int) Math.pow(t.getSize(), profunditat - 1);
+                        }
+                        System.out.println("Evitada la exploració de " + nodesAdicionals + " nodes aproximadament");
+
+                        // Sumatori de nodes no explorats
+                        nodesNoExplorats += nodesAdicionals;
+                    }
+                }
+            }
+            return new MinimaxResultat(puntuacioMin, desdeMin, finsaMin);
+        }
+     }
 
     public int heuristica(GameStatus taulerAmbMovimentFet) {
         int puntuacio = 0;
