@@ -6,6 +6,7 @@
 package edu.upc.epsevg.prop.loa;
 
 import edu.upc.epsevg.prop.loa.Board;
+import static edu.upc.epsevg.prop.loa.CellType.opposite;
 import edu.upc.epsevg.prop.loa.GameStatus;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -20,12 +21,14 @@ public class GambitodeLOA implements IPlayer, IAuto {
     private String name;
     private GameStatus s;
     CellType jugadorActual;
-    CellType jugadorOponent;
+    CellType jugadorOponent = opposite(jugadorActual);
     int nodesNoExplorats;
+    int profunditat_inicial;
  
 
     public GambitodeLOA(String name) {
         this.name = name;
+        this.profunditat_inicial = 1;
         nodesNoExplorats = 0;
     }
 
@@ -69,9 +72,24 @@ public class GambitodeLOA implements IPlayer, IAuto {
                 }
             }
         }
-
-        return new Move(queenFrom, queenTo, 0, 0, SearchType.RANDOM);
+        GameStatus taux = new GameStatus(s);
+        MinimaxResultat resultat = minimax(taux, this.profunditat_inicial, Integer.MIN_VALUE, Integer.MAX_VALUE, true, queenFrom, queenTo);
+        
+        Move m = new Move(resultat.desde, resultat.finsa, 0, 0, SearchType.MINIMAX);
+        String info="Profunditat màxima:"+ m.getMaxDepthReached()+"\n";
+        info+="Node explorats:    "+m.getNumerOfNodesExplored();
+        System.out.println(info);
+        
+        return new Move(resultat.desde, resultat.finsa, 0, 0, SearchType.MINIMAX);
     }
+    
+    /* @Override
+    public int moviment(Tauler t, int color) {
+        this.colorJugador = color;
+        Tauler taux = new Tauler(t);
+        MinimaxResultat resultat = minimax(taux, this.profunditat_inicial, Integer.MIN_VALUE, Integer.MAX_VALUE, true, 0);
+        return resultat.columna;
+    }*/
     
     public class MinimaxResultat {
         int valor;
@@ -85,7 +103,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
     
      public MinimaxResultat minimax(GameStatus t, int profunditat, int alpha, int beta, boolean maximitzant, Point queenFrom, Point queenTo) {
-        if(profunditat == 0 ){
+         
+         if(profunditat == 0 ){
             int valor = heuristica(t);
             return new MinimaxResultat(valor, queenFrom, queenTo);
         }
@@ -113,28 +132,31 @@ public class GambitodeLOA implements IPlayer, IAuto {
                         desdeMax = resultat.desde;
                         finsaMax = resultat.finsa;
                         alpha = resultat.valor;
+                        
                     }
+                    //System.out.println("alpha: "+alpha+ "beta: "+ beta);
                     
                     // Poda alfa-beta
-                    if(alpha <= beta){
-                        if (beta <= alpha) {
-                            continuar = false;
-                            // Calcul de nodes no explorats
-                            int movRestantsAquestaIteracio = t.getNumberOfPiecesPerColor(jugadorActual) - movIt;
-                            // Valor inicial: Assumim que tots eren fulla
-                            int nodesAdicionals = movRestantsAquestaIteracio;
-                            if (profunditat >= 2) {
-                                // Cada node restant generarà t.getMida() nodes adicionals
-                                nodesAdicionals = (int) movRestantsAquestaIteracio * t.getSize();
-                                // Cada node successor generarà t.getMida() nodes per cada profunditat restant
-                                nodesAdicionals += (int) Math.pow(t.getSize(), profunditat - 1);
-                            }
-                            System.out.println("Evitada la exploració de " + nodesAdicionals + " nodes aproximadament");
+                    
+                    
+                    if (beta <= alpha) {
+                        continuar = false;
+                        // Calcul de nodes no explorats
+                        int movRestantsAquestaIteracio = t.getNumberOfPiecesPerColor(jugadorActual) - movIt;
+                        // Valor inicial: Assumim que tots eren fulla
+                        int nodesAdicionals = movRestantsAquestaIteracio;
+                        if (profunditat >= 2) {
+                            // Cada node restant generarà t.getMida() nodes adicionals
+                            nodesAdicionals = (int) movRestantsAquestaIteracio * t.getSize();
+                            // Cada node successor generarà t.getMida() nodes per cada profunditat restant
+                            nodesAdicionals += (int) Math.pow(t.getSize(), profunditat - 1);
+                        }
+                        System.out.println("Evitada la exploració de " + nodesAdicionals + " nodes aproximadament");
 
-                            // Sumatori de nodes no explorats
-                            nodesNoExplorats += nodesAdicionals;
-                    }
+                        // Sumatori de nodes no explorats
+                        nodesNoExplorats += nodesAdicionals;
                 }
+                
             }
             
             }
@@ -192,7 +214,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
         int puntuacio = 0;
         int distanciesGambito = 0;
         int distanciesOponent = 0;
-
+        
         for (int i = 0; i < taulerAmbMovimentFet.getSize(); i++) {
             for (int j = 0; j < taulerAmbMovimentFet.getSize(); j++) {
                 Point analitzant = new Point(i, j);
@@ -205,11 +227,21 @@ public class GambitodeLOA implements IPlayer, IAuto {
                     }
                 }else if(color!=jugadorActual){
                    //Comptar  la distancia que tenen les fitxes del meu oponent
-                   int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
+                   int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorOponent);
+                   //Bloquejar els camins, interposant fitxes propies. Heurística 1
                     for (int k = 0; k < qn; k++) {
-                        Point altraFitxa = s.getPiece(jugadorActual, k);
+                        Point altraFitxa = s.getPiece(jugadorOponent, k);
                         distanciesOponent += (int) analitzant.distance(altraFitxa);
                     } 
+                    //putejarOponent(taulerAmbMovimentFet);
+                    /*si jugadorActual té una fitxa de jugadorOponent{
+                    si jugador oponent té als seus moviments possibles la possibilitat de tenir distància 0 (es a dir estar juntes)
+                    Menjar fitxa*/
+                    CellType aux;
+                    //vertical
+                    if (taulerAmbMovimentFet.getPos(analitzant.x, analitzant.y+1) != color){
+                       //if (taulerAmbMovimentFet.getPos(analitzant.x, analitzant.y+2) != color)
+                    }
                 }
             }
         }
@@ -218,10 +250,11 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
     
     int putejarOponent(GameStatus taulerAmbMovimentFet){
-        /*
-        //Bloquejar els camins, interposant fitxes propies. Heurística 1
-        if(l'oponent té tantes posicions per avançar com per a juntar-se amb un grupet o fitxa)
-            if (tinc tantes fitxes com la distancia que te la fitxa del oponent per a juntar-se amb un grupet)
+        
+        
+        //if(l'oponent té tantes posicions per avançar com per a juntar-se amb un grupet o fitxa)
+        //if ()
+            /*if (tinc tantes fitxes com la distancia que te la fitxa del oponent per a juntar-se amb un grupet)
                 blokeja el camí;
             else if(Si una fitxa meua, pot menjar-se una fitxa que uneix un grup)
                 me la menjo;
