@@ -20,7 +20,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
     private String name;
     private GameStatus s;
     CellType jugadorActual;
-    CellType jugadorOponent;
+    //CellType jugadorOponent;
     int nodesNoExplorats;
     private int profunditat_inicial;
     int hashfEXACT = 0;
@@ -38,6 +38,13 @@ public class GambitodeLOA implements IPlayer, IAuto {
     public GambitodeLOA(String name) {
         this.name = name;
         nodesNoExplorats = 0;
+        this.profunditat_inicial = 0;
+        
+    }
+    
+      public GambitodeLOA(int profunditat) {
+        this.name = name;
+        this.profunditat_inicial = profunditat;
     }
 
     /**
@@ -71,7 +78,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
                 GameStatus taulerAmbMovimentFet = new GameStatus(s);
                 taulerAmbMovimentFet.movePiece(posicioIniciCandidat, posicioFinalCandidat);
-                //int puntuacio = heuristica(taulerAmbMovimentFet); //revisar
+                
                 MinimaxResultat resultat = minimax(taulerAmbMovimentFet, this.profunditat_inicial, Integer.MIN_VALUE, Integer.MAX_VALUE, false, posicioIniciCandidat, posicioFinalCandidat);
                 if (resultat.valor > puntuacioMax) {
                     puntuacioMax = resultat.valor;
@@ -83,12 +90,12 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
         //GameStatus taux = new GameStatus(s);
         
-        Move m = new Move(queenFrom, queenTo, 0, 0, SearchType.MINIMAX_IDS);
+        Move m = new Move(queenFrom, queenTo, 0, 0, SearchType.MINIMAX);
         String info = "Profunditat màxima:" + m.getMaxDepthReached() + "\n";
         info += "Node explorats:    " + m.getNumerOfNodesExplored();
         System.out.println(info);
 
-        return new Move(queenFrom, queenTo, 0, 0, SearchType.MINIMAX_IDS);
+        return new Move(queenFrom, queenTo, 0, 0, SearchType.MINIMAX);
     }
     
     public class MinimaxResultat {
@@ -105,6 +112,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
      public MinimaxResultat minimax(GameStatus t, int profunditat, int alpha, int beta, boolean maximitzant, Point queenFrom, Point queenTo) {
         if(profunditat == 0 ){
             int valor = heuristica(t);
+            profunditat++;
             return new MinimaxResultat(valor, queenFrom, queenTo);
         }
         
@@ -114,6 +122,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
             Point desdeMax = null;
             
             // Mirem tots els moviments possibles
+            jugadorActual = s.getCurrentPlayer();
             int qn = t.getNumberOfPiecesPerColor(jugadorActual);
             Boolean continuar = true; // Boolean per poda alfa-beta
             for (int i = 0; i < qn; i++) {
@@ -165,6 +174,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
             
             // Mirem tots els moviments possibles
             Boolean continuar = true; // Boolean per poda alfa-beta
+            jugadorActual = s.getCurrentPlayer();
             int qn = t.getNumberOfPiecesPerColor(jugadorActual);
             for (int i = 0; i < qn; i++) {
                 Point posicioIniciCandidat = t.getPiece(jugadorActual, i);
@@ -210,30 +220,30 @@ public class GambitodeLOA implements IPlayer, IAuto {
     public int heuristica(GameStatus taulerAmbMovimentFet) {
         int puntuacio = 0;
         int distanciesGambito = 0;
-        int distanciesOponent = 0;
 
         for (int i = 0; i < taulerAmbMovimentFet.getSize(); i++) {
             for (int j = 0; j < taulerAmbMovimentFet.getSize(); j++) {
                 Point analitzant = new Point(i, j);
                 CellType color = taulerAmbMovimentFet.getPos(analitzant);
+                //jugadorActual = s.getCurrentPlayer();
                 if (color == jugadorActual) {
                     int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
                     for (int k = 0; k < qn; k++) {
                         Point altraFitxa = s.getPiece(jugadorActual, k);
                         distanciesGambito += (int) analitzant.distance(altraFitxa);
                     }
-                }else if(color!=jugadorActual){
+                }/*else if(color!=jugadorActual){
                    //Comptar  la distancia que tenen les fitxes del meu oponent
                    int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugadorActual);
                     for (int k = 0; k < qn; k++) {
                         Point altraFitxa = s.getPiece(jugadorActual, k);
                         distanciesOponent += (int) analitzant.distance(altraFitxa);
                     } 
-                }
+                }*/
             }
         }
-        if(distanciesGambito<distanciesOponent) return puntuacio - distanciesGambito;
-        else return puntuacio - distanciesOponent;
+        return puntuacio - distanciesGambito;
+      
     }
     
     //int putejarOponent(GameStatus taulerAmbMovimentFet){
