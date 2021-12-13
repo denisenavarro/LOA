@@ -16,141 +16,291 @@ import java.util.ArrayList;
 public class GambitodeLOA implements IPlayer, IAuto {
 
     private String nom;
-    private GameStatus s;
-    CellType jugador ;
-    private int profunditat;
+    CellType jugador;
+    private int profunditatInicial;
+    private int nodesVisitats;
+    private int profunditatMax;
+    private int tipoPartida;
     Boolean time_out;
-    Point desde = new Point(0, 0);
-    Point finsa = new Point(0, 0);
+    Point desdeResultado = null;
+    Point finsaResultado = null;
+
+    public GambitodeLOA(int profunditat) {
+        this.nom = nom;
+        this.profunditatInicial = profunditat;
+        this.tipoPartida = 0;
+    }
     
-    public GambitodeLOA(int profunditat){
-        this.nom =  nom;
-        this.profunditat = profunditat;
-    
+    public GambitodeLOA(int profunditat, int tipo) {
+        this.nom = nom;
+        this.profunditatInicial = profunditat;
+        this.tipoPartida = tipo;
     }
 
     @Override
     public void timeout() {
-       time_out = true;
+        time_out = true;
     }
 
-  @Override
+    @Override
     public String getName() {
         return "Gambito(" + nom + ")";
     }
-    
-    public Move move(GameStatus s){
-    jugador = s.getCurrentPlayer();
-    this.s = s;
-    int puntuacioMax = Integer.MIN_VALUE;
-    GameStatus aux = new GameStatus(s);
-    
-    int res = minimax(aux, this.profunditat, true);
-    aux.movePiece(desde, finsa);
-    if (res > puntuacioMax){
-    puntuacioMax = res;
-    }
-    
-        System.out.println("desde: "+desde+ "finsa:"+finsa);
- 
-    return new Move(desde, finsa, 0, 0, SearchType.MINIMAX);
-    }
-    
-    public int minimax(GameStatus s, int profunditat, boolean maxi) {
-         //jugador = s.getCurrentPlayer();  
-         //jugador = CellType.opposite(jugador);
-         
-         if(profunditat == 0 || s.isGameOver()){
-             jugador = s.getCurrentPlayer();
-            int valor = 0;
-            int number_pieces = s.getNumberOfPiecesPerColor(jugador);
-            
-            
-            for (int i = 0; i < number_pieces; i++) {
-           
-                desde = s.getPiece(jugador, i);
-                ArrayList<Point> movPossibles = s.getMoves(desde);
-                 for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
-                    finsa = movPossibles.get(movIt);
-                    GameStatus aux = new GameStatus(s);
-                    
-                    valor = heuristica(s);
-               
+
+    public Move move(GameStatus s) {
+        jugador = s.getCurrentPlayer();
+        GameStatus board = new GameStatus(s);
+        if(tipoPartida == 0)
+            minimax(board, this.profunditatInicial, true);
+        else if(tipoPartida == 1)
+            minimax_alfabeta(board, this.profunditatInicial, true);  
+        else if(tipoPartida == 2){
+            Point mejorOrigenIDS = null;
+            Point mejorDestinoIDS = null;
+            this.profunditatInicial = 1;
+            while(!time_out){
+                //minimax_ids(board, this.profunditatInicial, true);
+                this.profunditatInicial++;
+                
+                if(!time_out){
+                    mejorOrigenIDS = this.desdeResultado;
+                    mejorDestinoIDS = this.finsaResultado;
                 }
             }
-             return valor;          
             
+            this.desdeResultado = mejorOrigenIDS;
+            this.finsaResultado = mejorDestinoIDS;
+        }
+        
+        return new Move(desdeResultado, finsaResultado, nodesVisitats, profunditatMax, SearchType.MINIMAX);
+    }
+
+    public int minimax(GameStatus tablero, int profRestant, boolean maxi) {
+        if (profRestant == 0 || tablero.isGameOver()) {
+            if(profunditatMax < (this.profunditatInicial - profRestant)){
+                profunditatMax = (this.profunditatInicial - profRestant);
+            }
+
+            return heuristica(tablero);
         }
 
-        if (maxi == true) {
-           
-            jugador = s.getCurrentPlayer();
+        if (maxi) {
             int puntuacioMax = Integer.MIN_VALUE;
-            
-            int number_pieces = s.getNumberOfPiecesPerColor(jugador);
-            
-            
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
             for (int i = 0; i < number_pieces; i++) {
-           
-                desde = s.getPiece(jugador, i);
-                ArrayList<Point> movPossibles = s.getMoves(desde);
-                 for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
-                    finsa = movPossibles.get(movIt);
-                    GameStatus aux = new GameStatus(s);
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
                     aux.movePiece(desde, finsa);
-                  
-                    int res = minimax(aux, profunditat-1, false);
-                    if (puntuacioMax < res) puntuacioMax = res;
-                }
-            }
-            return puntuacioMax;
-            
-        } else {
-           
-            jugador = CellType.opposite(jugador);
-            int puntuacioMin = Integer.MAX_VALUE;
-            
-            int number_pieces = s.getNumberOfPiecesPerColor(jugador);
-            
-            
-            for (int i = 0; i < number_pieces; i++) {
-                desde = s.getPiece(jugador, i);
-                ArrayList<Point> movPossibles = s.getMoves(desde);
-                 for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
-                    finsa = movPossibles.get(movIt);
-                    GameStatus aux = new GameStatus(s);
-                    aux.movePiece(desde, finsa);
-                  
-                    int res = minimax(aux, profunditat-1, true);
-                    if (puntuacioMin > res) puntuacioMin = res;
-                }
-            }
-            return puntuacioMin;
-           
-        }
-    }
- public int heuristica(GameStatus taulerAmbMovimentFet) {
-        int puntuacio = 0;
-        int distancies = 0;
-       
-        for (int i = 0; i < taulerAmbMovimentFet.getSize(); i++) {
-            for (int j = 0; j < taulerAmbMovimentFet.getSize(); j++) {
-                Point analitzant = new Point(i, j);
-                CellType color = taulerAmbMovimentFet.getPos(analitzant);
-                if (color == jugador) {
-                    //desde=analitzant;
-                    int qn = taulerAmbMovimentFet.getNumberOfPiecesPerColor(jugador);
-                    for (int k = 0; k < qn; k++) {
-                        Point altraFitxa = s.getPiece(jugador, k);
-                        //finsa=altraFitxa;
-                        distancies += (int) analitzant.distance(altraFitxa);
+                    nodesVisitats++;
+                    
+                    int res = minimax(aux, profRestant - 1, false);
+
+                    if (puntuacioMax < res) {
+                        puntuacioMax = res;
+                        if (profRestant == this.profunditatInicial) {
+                            desdeResultado = desde;
+                            finsaResultado = finsa;
+                        }
                     }
                 }
             }
-        }
+            return puntuacioMax;
 
-        return puntuacio - distancies;
-       
+        } else {
+            int puntuacioMin = Integer.MAX_VALUE;
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
+            for (int i = 0; i < number_pieces; i++) {
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+                
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
+                    aux.movePiece(desde, finsa);
+                    nodesVisitats++;
+
+                    int res = minimax(aux, profRestant - 1, true);
+                    if (puntuacioMin > res) {
+                        puntuacioMin = res;
+                    }
+                }
+            }
+            return puntuacioMin;
+
+        }
     }
     
+    public int minimax_alfabeta(GameStatus tablero, int profRestant, boolean maxi) {
+        if (profRestant == 0 || tablero.isGameOver()) {
+            if(profunditatMax < (this.profunditatInicial - profRestant)){
+                profunditatMax = (this.profunditatInicial - profRestant);
+            }
+
+            return heuristica(tablero);
+        }
+
+        if (maxi) {
+            int puntuacioMax = Integer.MIN_VALUE;
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
+            for (int i = 0; i < number_pieces; i++) {
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
+                    aux.movePiece(desde, finsa);
+                    nodesVisitats++;
+                    
+                    int res = minimax(aux, profRestant - 1, false);
+
+                    if (puntuacioMax < res) {
+                        puntuacioMax = res;
+                        // actualizo alfa
+
+                        if (profRestant == this.profunditatInicial) {
+                            desdeResultado = desde;
+                            finsaResultado = finsa;
+                        }
+                    }
+                    
+                    // break si alfa < beta  
+                }
+                
+                // break si alfa < beta
+            }
+            return puntuacioMax;
+
+        } else {
+            int puntuacioMin = Integer.MAX_VALUE;
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
+            for (int i = 0; i < number_pieces; i++) {
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+                
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
+                    aux.movePiece(desde, finsa);
+                    nodesVisitats++;
+
+                    int res = minimax(aux, profRestant - 1, true);
+                    if (puntuacioMin > res) {
+                        puntuacioMin = res;
+                        //actualizo beta
+                    }
+                    
+                    // break si alfa < beta
+                }
+
+                // break si alfa < beta
+            }
+            return puntuacioMin;
+
+        }
+    }
+
+    public int minimax_ids(GameStatus tablero, int profRestant, boolean maxi) {
+        if (profRestant == 0 || tablero.isGameOver()) {
+            if(profunditatMax < (this.profunditatInicial - profRestant)){
+                profunditatMax = (this.profunditatInicial - profRestant);
+            }
+
+            return heuristica(tablero);
+        }
+
+        if (maxi) {
+            int puntuacioMax = Integer.MIN_VALUE;
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
+            for (int i = 0; i < number_pieces && !time_out; i++) {
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size() && !time_out; movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
+                    aux.movePiece(desde, finsa);
+                    nodesVisitats++;
+                    
+                    int res = minimax(aux, profRestant - 1, false);
+
+                    if (puntuacioMax < res) {
+                        puntuacioMax = res;
+                        // actualizo alfa
+
+                        if (profRestant == this.profunditatInicial) {
+                            desdeResultado = desde;
+                            finsaResultado = finsa;
+                        }
+                    }
+                    
+                    // break si alfa < beta  
+                }
+                
+                // break si alfa < beta
+            }
+            return puntuacioMax;
+
+        } else {
+            int puntuacioMin = Integer.MAX_VALUE;
+
+            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
+            for (int i = 0; i < number_pieces && !time_out; i++) {
+                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
+                
+                ArrayList<Point> movPossibles = tablero.getMoves(desde);
+                for (int movIt = 0; movIt < movPossibles.size() && !time_out; movIt++) {
+                    Point finsa = movPossibles.get(movIt);
+                    
+                    GameStatus aux = new GameStatus(tablero);
+                    aux.movePiece(desde, finsa);
+                    nodesVisitats++;
+
+                    int res = minimax(aux, profRestant - 1, true);
+                    if (puntuacioMin > res) {
+                        puntuacioMin = res;
+                        //actualizo beta
+                    }
+                    
+                    // break si alfa < beta
+                }
+
+                // break si alfa < beta
+            }
+            return puntuacioMin;
+
+        }
+    }
+    
+    public int heuristica(GameStatus tauler) {
+        int puntuacio = 0;
+        int distancies = 0;
+        
+        int qn = tauler.getNumberOfPiecesPerColor(jugador);
+        for (int i = 0; i < qn; i++) {
+            Point fitxa = tauler.getPiece(jugador, i);
+            for(int j = i; j < qn; j++){
+                Point altraFitxa = tauler.getPiece(jugador, j);
+                distancies += (int) fitxa.distance(altraFitxa);            
+            }
+        }
+        
+        return puntuacio - distancies;
+
+    }
+
 }
