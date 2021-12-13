@@ -25,7 +25,7 @@ public class Game {
                 //IPlayer player1 = new RandomPlayer("Crazy Chris");
                 //IPlayer player1 = new RandomPlayer("Crazy Ivan");
                 IPlayer player2 = new MCCloudPlayer();
-                IPlayer player1 = new GambitodeLOA("Gambito");
+                IPlayer player1 = new GambitodeLOA(0);
                                 
                 new Board(player1 , player2, 10, Level.DIFFICULT);
              }
