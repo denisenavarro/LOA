@@ -5,9 +5,9 @@
  */
 package edu.upc.epsevg.prop.loa;
 
-import edu.upc.epsevg.prop.loa.Board;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  *
@@ -29,17 +29,28 @@ public class GambitodeLOA implements IPlayer, IAuto {
     Point mejorDestinoIDS = null;
     int alpha;
     int beta;
-
+    
+    //Taula de zobrist per representar el taulell
+    long[][][] ZobristTable;
+    
     public GambitodeLOA(int profunditat) {
         this.nom = nom;
         this.profunditatInicial = profunditat;
         this.tipoPartida = 0;
+        
+        //inicializació i generació de la taula zobrist
+        this.ZobristTable = new long[8][8][13];
+        generaTaulaHash();
     }
 
     public GambitodeLOA(int profunditat, int tipo) {
         this.nom = nom;
         this.profunditatInicial = profunditat;
         this.tipoPartida = tipo;
+        
+        //inicializació i generació de la taula zobrist
+        this.ZobristTable = new long[8][8][13];
+        generaTaulaHash();
     }
 
     @Override
@@ -50,6 +61,52 @@ public class GambitodeLOA implements IPlayer, IAuto {
     @Override
     public String getName() {
         return "Gambito(" + nom + ")";
+    }
+
+    /*public long random() {
+
+        Random r = new Random();
+        int high = ((int) Math.pow(2, 64)) - 1;
+        int result = r.nextInt(high);
+        return result;
+    }*/
+
+    public int index(GameStatus s, CellType ficha) {
+        CellType actual = s.currentPlayer;
+        if (ficha == actual) {
+            return 0;
+        } else {
+            return 1;
+        }
+
+    }
+    
+    /*Funció que genera la Zobrist Table que representarà totes les configuracions del taulell*/
+    public void generaTaulaHash() {
+        
+        Random rand = new Random();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                for (int k = 0; k < 13; k++) {
+                    this.ZobristTable[i][j][k] = rand.nextLong();
+                }
+            }
+        }
+    }
+
+    /*Funció que itera sobre tot el taulell i retorna el valor hash que representa l'estat del tauler*/
+    public long recalculaHash(GameStatus s){
+    long h = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+               if(s.getPos(i, j) != CellType.EMPTY){
+                   //CellType ficha = s.getPos(i, j);
+                   int ficha = index(s, s.getPos(i, j));
+                   h ^= this.ZobristTable[i][j][ficha];
+               }
+            }
+        }
+        return h;
     }
 
     public Move move(GameStatus s) {
@@ -180,13 +237,12 @@ public class GambitodeLOA implements IPlayer, IAuto {
                         }
                     }
 
-                    // break si alfa < beta
+                    
                     if (beta <= alpha) {
                         break;
                     }
                 }
 
-                // break si alfa < beta
             }
             return puntuacioMax;
 
@@ -224,103 +280,6 @@ public class GambitodeLOA implements IPlayer, IAuto {
         }
     }
 
-    /* public int minimax_ids(GameStatus tablero, int profRestant, boolean maxi, int alpha, int beta) {
-        if (profRestant == 0 || tablero.isGameOver()) {
-            if(profunditatMax < (this.profunditatInicial - profRestant)){
-                profunditatMax = (this.profunditatInicial - profRestant);
-            }
-
-            return heuristica(tablero);
-        }
-
-        if (maxi) {
-            int puntuacioMax = Integer.MIN_VALUE;
-
-            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
-            for (int i = 0; i < number_pieces && !time_out; i++) {
-                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
-
-                ArrayList<Point> movPossibles = tablero.getMoves(desde);
-                for (int movIt = 0; movIt < movPossibles.size() && !time_out; movIt++) {
-                    Point finsa = movPossibles.get(movIt);
-                    
-                    GameStatus aux = new GameStatus(tablero);
-                    aux.movePiece(desde, finsa);
-                    nodesVisitats++;
-                    
-                    int res = minimax_ids(aux, profRestant - 1, false, alpha, beta);
-
-                    if (puntuacioMax < res) {
-                        puntuacioMax = res;
-                        // actualizo alfa
-                        alpha = Math.max(alpha, res);
-
-                        if (profRestant == this.profunditatInicial) {
-                            desdeResultado = desde;
-                            finsaResultado = finsa;
-                        }
-                    }
-                    
-                    // break si alfa < beta  
-                    if (beta<=alpha){
-                        break;
-                    }
-                }
-                
-                // break si alfa < beta
-            }
-            return puntuacioMax;
-
-        } else {
-            int puntuacioMin = Integer.MAX_VALUE;
-
-            int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
-            for (int i = 0; i < number_pieces && !time_out; i++) {
-                Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
-                
-                ArrayList<Point> movPossibles = tablero.getMoves(desde);
-                for (int movIt = 0; movIt < movPossibles.size() && !time_out; movIt++) {
-                    Point finsa = movPossibles.get(movIt);
-                    
-                    GameStatus aux = new GameStatus(tablero);
-                    aux.movePiece(desde, finsa);
-                    nodesVisitats++;
-
-                    int res = minimax_ids(aux, profRestant - 1, true, alpha, beta);
-                    if (puntuacioMin > res) {
-                        puntuacioMin = res;
-                        //actualizo beta
-                        beta = Math.min(beta, res);
-                    }
-                    
-                    // break si alfa < beta
-                    if (beta<=alpha){
-                        break;
-                    }
-                }
-
-                // break si alfa < beta
-            }
-            return puntuacioMin;
-
-        }
-    }*/
- /* public int heuristica(GameStatus tauler) {
-        int puntuacio = 0;
-        int distancies = 0;
-
-        int qn = tauler.getNumberOfPiecesPerColor(jugador);
-        for (int i = 0; i < qn; i++) {
-            Point fitxa = tauler.getPiece(jugador, i);
-            for (int j = i; j < qn; j++) {
-                Point altraFitxa = tauler.getPiece(jugador, j);
-                distancies += (int) fitxa.distance(altraFitxa);
-            }
-        }
-
-        return puntuacio - distancies;
-
-    }*/
     public int heuristica(GameStatus tauler) {
         int puntuacio = 0;
         int distanciesjo = 0;
@@ -352,14 +311,4 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
     }
 
-    //if(l'oponent té tantes posicions per avançar com per a juntar-se amb un grupet o fitxa)
-    //if ()
-    /*if (tinc tantes fitxes com la distancia que te la fitxa del oponent per a juntar-se amb un grupet)
-                blokeja el camí;
-            else if(Si una fitxa meua, pot menjar-se una fitxa que uneix un grup)
-                me la menjo;
-            else if(si tinc una fitxa al camí de l'oponent') 
-                la trek   */
-    //Capturar las fichas que unen, es decir, fichas sin las cuales un grupo queda dividido.
-    //Cambiar el número de fichas sobre una línea para modificar así los movimientos posibles.
 }
