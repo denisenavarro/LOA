@@ -38,7 +38,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * Descripció: Constructor parametritzat amb una profunditat determinada que
      * inhabilita el temporitzador (time_out)
      *
-     * @param profunditat -> El valor de la profunditat cal que sigui major a 0
+     * @param profunditat  El valor de la profunditat cal que sigui major a 0
      */
     public GambitodeLOA(int profunditat) {
         //Ininicialització de tots els points necessaris
@@ -65,8 +65,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * correspon al tipus de partida que volem jugar 0, 1 o 2 corresponent
      * respectivament a minimax, minimax_alfabeta o minimax iteratiu.
      *
-     * @param profunditat -> El valor de la profunditat cal que sigui major a 0
-     * @param tipo -> tipoPartida
+     * @param profunditat  El valor de la profunditat cal que sigui major a 0
+     * @param tipo  tipoPartida
      */
     public GambitodeLOA(int profunditat, int tipo) {
         //Ininicialització de tots els points necessaris
@@ -126,8 +126,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * Descripció: Funció que itera sobre tot el tauler i retorna el valor hash que
      * representa l'estat del tauler en qüestió.
      *
-     * @param board -> Estat del tauler en aquests moments
-     * @return h -> Retorna el valor de hash que s'ha obtingut i que representaria l'estat del tauler.
+     * @param board  Estat del tauler en aquests moments
+     * @return h  Retorna el valor de hash que s'ha obtingut i que representaria l'estat del tauler.
      */
     public long recalculaHash(GameStatus board) {
         long h = 0;
@@ -149,7 +149,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * L'algorisme de minimax a fer servir, com hem dit abans es divideix en 3 tipus de partida (minimax, minimax_alfabeta
      * o minimax iteratiu).
      * 
-     * @param s -> Estat en aquells moments del tauler.
+     * @param s  Estat en aquells moments del tauler.
      * @return Millor moviment fins a una profunditat fixada.
      */
     public Move move(GameStatus s) {
@@ -163,9 +163,9 @@ public class GambitodeLOA implements IPlayer, IAuto {
         long hash = recalculaHash(board);
         
         //Segons el tipus de Partida que ens hagin indicat farem un dels 3 condicionants.
-        //Tipus de Partida 0 -> minimax
-        //Tipus de Partida 1 -> minimax_alfabeta
-        //Tipus de Partida 2 -> minimax_alfabeta iteratiu
+        //Tipus de Partida 0  minimax
+        //Tipus de Partida 1  minimax_alfabeta
+        //Tipus de Partida 2  minimax_alfabeta iteratiu
         if (tipoPartida == 0) {
             minimax(board, this.profunditatInicial, true);
         } else if (tipoPartida == 1) {
@@ -210,9 +210,9 @@ public class GambitodeLOA implements IPlayer, IAuto {
     /**
      * Descripció: Executa l'algoritme minimax simple
      * 
-     * @param tablero -> Estat determinat del tauler.
-     * @param profRestant -> Profunditat actual de l'algoritme.
-     * @param maxi -> Determina si volem el resultat màxim o mínim
+     * @param tablero  Estat determinat del tauler.
+     * @param profRestant  Profunditat actual de l'algoritme.
+     * @param maxi  Determina si volem el resultat màxim o mínim
      * @return retornar el valor heurístic
      */
     public int minimax(GameStatus tablero, int profRestant, boolean maxi) {
@@ -281,11 +281,11 @@ public class GambitodeLOA implements IPlayer, IAuto {
     /**
      * Descripció: Executa l'algoritme minimax amb poda alfa-beta
      *  
-     * @param tablero -> Estat actual del tauler
-     * @param profRestant -> Profunditat actual de l'algoritme.
-     * @param maxi -> Determina si volem el resultat màxim o mínim
-     * @param alpha -> Es tracta del valor que contindrà el màxim  heurístic actual en les diferents crides.
-     * @param beta -> Es el valor que contindrà el mínim en les diferents crides.
+     * @param tablero  Estat actual del tauler
+     * @param profRestant  Profunditat actual de l'algoritme.
+     * @param maxi  Determina si volem el resultat màxim o mínim
+     * @param alpha Es tracta del valor que contindrà el màxim  heurístic actual en les diferents crides.
+     * @param beta  Es el valor que contindrà el mínim en les diferents crides.
      * @return retorna el valor heurísitic
      */
     public int minimax_alfabeta(GameStatus tablero, int profRestant, boolean maxi, int alpha, int beta) {
@@ -370,7 +370,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
     /**
      * Descripció: Funció heurística per obtenir la puntuacio per al millor moviment
      *
-     * @param tauler -> Estat actual del tauler
+     * @param tauler  Estat actual del tauler
      * @return (puntuacio-distaciesjo) o (puntuacio-distanciesop)
      */
     public int heuristica(GameStatus tauler) {
