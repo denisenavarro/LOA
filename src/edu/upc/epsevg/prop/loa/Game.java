@@ -1,5 +1,6 @@
 package edu.upc.epsevg.prop.loa;
 
+import edu.upc.epsevg.prop.loa.players.GambitodeLOA;
 import edu.upc.epsevg.prop.loa.Level;
 import edu.upc.epsevg.prop.loa.IPlayer;
 import edu.upc.epsevg.prop.loa.players.*;
