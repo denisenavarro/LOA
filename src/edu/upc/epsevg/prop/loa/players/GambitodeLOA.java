@@ -38,10 +38,10 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * Descripció: Constructor parametritzat amb una profunditat determinada que
      * inhabilita el temporitzador (time_out)
      *
-     * @param profunditat  El valor de la profunditat cal que sigui major a 0
+     * @param profunditat El valor de la profunditat cal que sigui major a 0
      */
     public GambitodeLOA(int profunditat) {
-        //Ininicialització de tots els points necessaris
+        //Inicialització de tots els points necessaris
         this.mejorDestinoIDS = null;
         this.mejorOrigenIDS = null;
         this.finsaResultado = null;
@@ -55,7 +55,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
         this.profunditatMax = 0;
 
         //inicializació i generació de la taula zobrist
-        this.ZobristTable = new long[8][8][3];
+        this.ZobristTable = new long[8][8][2];
         generaTaulaHash();
     }
 
@@ -65,8 +65,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
      * correspon al tipus de partida que volem jugar 0, 1 o 2 corresponent
      * respectivament a minimax, minimax_alfabeta o minimax iteratiu.
      *
-     * @param profunditat  El valor de la profunditat cal que sigui major a 0
-     * @param tipo  tipoPartida
+     * @param profunditat El valor de la profunditat cal que sigui major a 0
+     * @param tipo tipoPartida que decideix quin tipus de minimax usar
      */
     public GambitodeLOA(int profunditat, int tipo) {
         //Ininicialització de tots els points necessaris
@@ -74,7 +74,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
         this.mejorOrigenIDS = null;
         this.finsaResultado = null;
         this.desdeResultado = null;
-
+        this.tipoPartida = tipo;
         this.nom = nom;
         this.profunditatInicial = profunditat; //La profunditat es fixa
         this.time_out = false;
@@ -87,16 +87,16 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
 
     /**
-     * Descripció: Funció que ens diu que cal parar la cerca en curs perquè s'ha exaurit el
-     * temps de joc, es a dir, posa la variable time_out a true.
+     * Descripció: Funció que ens diu que cal parar la cerca en curs perquè s'ha
+     * exaurit el temps de joc, es a dir, posa la variable time_out a true.
      */
     @Override
     public void timeout() {
-        time_out = true;
+        this.time_out = true;
     }
 
     /**
-     * Descripció: Funció per obtenir el nom del jugador que fa servir per 
+     * Descripció: Funció per obtenir el nom del jugador que fa servir per
      * visualització a la UI.
      *
      * @return Nom del jugador
@@ -123,11 +123,12 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
 
     /**
-     * Descripció: Funció que itera sobre tot el tauler i retorna el valor hash que
-     * representa l'estat del tauler en qüestió.
+     * Descripció: Funció que itera sobre tot el tauler i retorna el valor hash
+     * que representa l'estat del tauler en qüestió.
      *
-     * @param board  Estat del tauler en aquests moments
-     * @return h  Retorna el valor de hash que s'ha obtingut i que representaria l'estat del tauler.
+     * @param board Estat del tauler en aquests moments
+     * @return h Retorna el valor de hash que s'ha obtingut i que representaria
+     * l'estat del tauler.
      */
     public long recalculaHash(GameStatus board) {
         long h = 0;
@@ -136,7 +137,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
                 //Anirem realizant la operació XOR entre totes les fitxes que siguin buides del tauler
                 if (board.getPos(i, j) != CellType.EMPTY) {
                     CellType ficha = board.getPos(i, j);
-                    h ^= this.ZobristTable[i][j][ficha.ordinal()-1];
+                    h ^= this.ZobristTable[i][j][ficha.ordinal() - 1];
                 }
             }
         }
@@ -144,12 +145,13 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
 
     /**
-     * Descripció: Funció que retorna el millor moviment que s'hagi trobat en una profunditat
-     * fixada determinada donat un tauler amb el seu estat corresponent, i fent servir l'algorisme de minimax.
-     * L'algorisme de minimax a fer servir, com hem dit abans es divideix en 3 tipus de partida (minimax, minimax_alfabeta
-     * o minimax iteratiu).
-     * 
-     * @param s  Estat en aquells moments del tauler.
+     * Descripció: Funció que retorna el millor moviment que s'hagi trobat en
+     * una profunditat fixada determinada donat un tauler amb el seu estat
+     * corresponent, i fent servir l'algorisme de minimax. L'algorisme de
+     * minimax a fer servir, com hem dit abans es divideix en 3 tipus de partida
+     * (minimax, minimax_alfabeta o minimax iteratiu).
+     *
+     * @param s Estat en aquells moments del tauler.
      * @return Millor moviment fins a una profunditat fixada.
      */
     public Move move(GameStatus s) {
@@ -160,8 +162,9 @@ public class GambitodeLOA implements IPlayer, IAuto {
         //Generem un GameStatus auxiliar del que ens passen per paràmetre.
         GameStatus board = new GameStatus(s);
         //Calculem el valor del hash en l'estat del tauler en aquests moments.
-        long hash = recalculaHash(board);
-        
+        long hash;
+        hash = recalculaHash(board);
+
         //Segons el tipus de Partida que ens hagin indicat farem un dels 3 condicionants.
         //Tipus de Partida 0  minimax
         //Tipus de Partida 1  minimax_alfabeta
@@ -193,11 +196,11 @@ public class GambitodeLOA implements IPlayer, IAuto {
             this.finsaResultado = mejorDestinoIDS;
 
         }
-        
+
         //Aprofitem per realitzar les diferets XORS per obtenir el valor hash 
-        hash ^= this.ZobristTable[desdeResultado.x][desdeResultado.y][s.getCurrentPlayer().ordinal()-1];
-        hash ^= this.ZobristTable[finsaResultado.x][finsaResultado.y][s.getCurrentPlayer().ordinal()-1];
-        
+        hash ^= ZobristTable[desdeResultado.x][desdeResultado.y][CellType.toColor01(jugador)];
+        hash ^= ZobristTable[finsaResultado.x][finsaResultado.y][CellType.toColor01(jugador)];
+
         //Depenent de quin tipus de Partida sigui necessitem que el SearchType sigui MINIMAX o MINIMAX_IDS
         //Per tant, farem un return o un altre segons quines siguien les condicions.
         if (tipoPartida == 0 || tipoPartida == 1) {
@@ -209,13 +212,14 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
     /**
      * Descripció: Executa l'algoritme minimax simple
-     * 
-     * @param tablero  Estat determinat del tauler.
-     * @param profRestant  Profunditat actual de l'algoritme.
-     * @param maxi  Determina si volem el resultat màxim o mínim
+     *
+     * @param tablero Estat determinat del tauler.
+     * @param profRestant Profunditat actual de l'algoritme.
+     * @param maxi Determina si volem el resultat màxim o mínim
      * @return retornar el valor heurístic
      */
     public int minimax(GameStatus tablero, int profRestant, boolean maxi) {
+        //Es el cas bàsic, retornem heurísitca si arribem a la profunditat 0 o el joc ha finalitzat
         if (profRestant == 0 || tablero.isGameOver()) {
             if (profunditatMax < (this.profunditatInicial - profRestant)) {
                 profunditatMax = (this.profunditatInicial - profRestant);
@@ -223,28 +227,29 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
             return heuristica(tablero);
         }
-
+        //Si volem el resultat màxim
         if (maxi) {
             int puntuacioMax = Integer.MIN_VALUE;
 
             int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
             for (int i = 0; i < number_pieces; i++) {
+                //Point per després simular desde on es mou la fitxa en qüestió
                 Point desde = tablero.getPiece(tablero.getCurrentPlayer(), i);
-
+                //Obtenim els moviments possibles de la fitxa a la posició d'aquell moment
                 ArrayList<Point> movPossibles = tablero.getMoves(desde);
                 for (int movIt = 0; movIt < movPossibles.size(); movIt++) {
-                    Point finsa = movPossibles.get(movIt);
+                    Point finsa = movPossibles.get(movIt); //Point per després simular fins a on es mouria la fitxa
 
-                    GameStatus aux = new GameStatus(tablero);
-                    aux.movePiece(desde, finsa);
-                    nodesVisitats++;
+                    GameStatus aux = new GameStatus(tablero); //Generem una còpia auxiliar del tauler per poder fer simulacions dels moviments
+                    aux.movePiece(desde, finsa); //Simulació dels moviments de les fitxes
+                    nodesVisitats++; //Actualització dels nodes visitats
 
                     int res = minimax(aux, profRestant - 1, false);
 
                     if (puntuacioMax < res) {
                         puntuacioMax = res;
                         if (profRestant == this.profunditatInicial) {
-                            desdeResultado = desde;
+                            desdeResultado = desde; //Cal que actualitzem les variables desdeResultado i finsaResultado per tal que a la funció move faci el moviment correcte
                             finsaResultado = finsa;
                         }
                     }
@@ -252,7 +257,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
             }
             return puntuacioMax;
 
-        } else {
+        } else { //Per al mínim fem literal el mateix però adaptat
             int puntuacioMin = Integer.MAX_VALUE;
 
             int number_pieces = tablero.getNumberOfPiecesPerColor(tablero.getCurrentPlayer());
@@ -280,12 +285,13 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
     /**
      * Descripció: Executa l'algoritme minimax amb poda alfa-beta
-     *  
-     * @param tablero  Estat actual del tauler
-     * @param profRestant  Profunditat actual de l'algoritme.
-     * @param maxi  Determina si volem el resultat màxim o mínim
-     * @param alpha Es tracta del valor que contindrà el màxim  heurístic actual en les diferents crides.
-     * @param beta  Es el valor que contindrà el mínim en les diferents crides.
+     *
+     * @param tablero Estat actual del tauler
+     * @param profRestant Profunditat actual de l'algoritme.
+     * @param maxi Determina si volem el resultat màxim o mínim
+     * @param alpha Es tracta del valor que contindrà el màxim heurístic actual
+     * en les diferents crides.
+     * @param beta Es el valor que contindrà el mínim en les diferents crides.
      * @return retorna el valor heurísitic
      */
     public int minimax_alfabeta(GameStatus tablero, int profRestant, boolean maxi, int alpha, int beta) {
@@ -316,7 +322,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
                     if (puntuacioMax < res) {
                         puntuacioMax = res;
-                        // actualizo alfa
+                        // actualitzo alfa
                         alpha = Math.max(alpha, res);
 
                         if (profRestant == this.profunditatInicial) {
@@ -368,10 +374,11 @@ public class GambitodeLOA implements IPlayer, IAuto {
     }
 
     /**
-     * Descripció: Funció heurística per obtenir la puntuacio per al millor moviment
+     * Descripció: Funció heurística per obtenir la puntuacio per al millor
+     * moviment
      *
-     * @param tauler  Estat actual del tauler
-     * @return (puntuacio-distaciesjo) o (puntuacio-distanciesop)
+     * @param tauler Estat actual del tauler
+     * @return valor heurísitc
      */
     public int heuristica(GameStatus tauler) {
         int puntuacio = 0;
@@ -382,8 +389,8 @@ public class GambitodeLOA implements IPlayer, IAuto {
 
         int jo = tauler.getNumberOfPiecesPerColor(jugador);
         int op = tauler.getNumberOfPiecesPerColor(oponent);
-        if(contador_jugades < 10){
-            distanciesjo*=10;
+        if (contador_jugades < 10) {
+            distanciesjo *= 10;
         }
         for (int i = 0; i < jo; i++) {
             Point fitxa = tauler.getPiece(jugador, i);
@@ -401,7 +408,7 @@ public class GambitodeLOA implements IPlayer, IAuto {
                 contador_jugades++;
             }
         }
-        
+
         if (distanciesjo > distanciesop) {
             return puntuacio - distanciesjo;
         } else {
